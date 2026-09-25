@@ -94,9 +94,8 @@ impl GameOfLife {
                                         .map(|x| self.grid.get(x.0, x.1))
                                         .filter(|&&x| x == Cell::Alive).count();
                 let new_cell_state = match (self.grid.get(r,c), alive_neighbors_count) {
-                        (Cell::Alive, 0..=1) => Cell::Dead,
                         (Cell::Alive, 2..=3) => Cell::Alive,
-                        (Cell::Alive, 4..) => Cell::Dead,
+                        (Cell::Alive, _) => Cell::Dead,
                         (Cell::Dead, 3) => Cell::Alive,
                         (Cell::Dead, _) => Cell::Dead
                     };
