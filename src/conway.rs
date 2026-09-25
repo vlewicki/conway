@@ -40,17 +40,19 @@ impl<T: Clone + Default> Grid<T> {
         self.grid[row*self.cols+col] = value
     }
 
-    pub fn neighbours(&self, row: usize, col: usize) -> Vec<(usize, usize)> {
-        let mut x = vec![];
-        for r in row.saturating_sub(1)..self.rows.min(row+2){
-            for c in col.saturating_sub(1)..self.cols.min(col+2){
-                if r == row && c == col {
-                    continue;
-                }
-                x.push((r, c));
-            }
-        }
-        x
+    pub fn neighbours(&self, row: usize, col: usize)
+        -> impl Iterator<Item = (usize, usize)> + '_
+    {
+        let r0 = row.saturating_sub(1);
+        let r1 = (row + 2).min(self.rows);
+        let c0 = col.saturating_sub(1);
+        let c1 = (col + 2).min(self.cols);
+    
+        (r0..r1).flat_map(move |r| {
+            (c0..c1).filter_map(move |c| {
+                if r == row && c == col { None } else { Some((r, c)) }
+            })
+        })
     }
 }
 
@@ -90,7 +92,7 @@ impl GameOfLife {
         let mut new_grid = Grid::<Cell>::new(self.grid.rows, self.grid.cols);
         for r in 0..self.grid.rows {
             for c in 0..self.grid.cols {
-                let alive_neighbors_count = self.grid.neighbours(r, c).iter()
+                let alive_neighbors_count = self.grid.neighbours(r, c)
                                         .map(|x| self.grid.get(x.0, x.1))
                                         .filter(|&&x| x == Cell::Alive).count();
                 let new_cell_state = match (self.grid.get(r,c), alive_neighbors_count) {
