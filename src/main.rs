@@ -5,12 +5,12 @@ mod gamestate;
 mod app;
 
 
-use std::{io::{Error, Result, stdout}, thread, time::Duration};
+use std::{io::{Result, stdout}, thread, time::Duration};
 
 use crossterm::{event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseEvent}, execute};
-use ratatui::{DefaultTerminal, Frame};
+use ratatui::Frame;
 
-use crate::{app::App, conway::{Cell::{self}, GameOfLife, Grid}, gamestate::GameState};
+use crate::{app::App, conway::{GameOfLife, Grid}, gamestate::GameState};
 
 
 struct ConwayApp{
@@ -49,7 +49,7 @@ impl ConwayApp {
         while event::poll(Duration::from_millis(0))? {
             let Self { running, game, paused } = self;
             match event::read()? {
-                Event::Mouse(MouseEvent{kind, column, row, modifiers}) => {
+                Event::Mouse(MouseEvent{kind, column, row, modifiers: _}) => {
                     match kind {
                         event::MouseEventKind::Down(event::MouseButton::Left) => {
                             let (h, w) = game.get_grid().size();
@@ -61,7 +61,7 @@ impl ConwayApp {
                         _ => {}
                     }
                 }
-                Event::Key(KeyEvent{code, modifiers, kind, state}) => {
+                Event::Key(KeyEvent{code, modifiers: _, kind: _, state: _}) => {
                     match code {
                         KeyCode::Char('q') => *running = false,
                         KeyCode::Char('p') => *paused = !*paused,

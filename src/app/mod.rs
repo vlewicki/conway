@@ -1,7 +1,6 @@
-use std::io::{Error, Result};
+use std::io::Result;
 
-use ratatui::{Frame, widgets::Widget};
-use thiserror::Error;
+use ratatui::Frame;
 
 pub trait App{
     fn running(&self) -> bool;

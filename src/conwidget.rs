@@ -1,11 +1,9 @@
-use std::{io::{Write, stderr}, u16};
-
-use ratatui::{style::Stylize, text::Span, widgets::{StatefulWidget, Widget}};
+use ratatui::{style::Stylize, text::Span, widgets::StatefulWidget};
 
 use crate::{conway::GameOfLife, gamestate::GameState};
 
 
-fn alive_cell(state: &GameState) -> Span{
+fn alive_cell(state: &GameState) -> Span<'_>{
     let span = Span::from("  ");
     if state.paused {
         span.on_gray()
