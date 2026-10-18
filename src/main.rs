@@ -50,15 +50,12 @@ impl ConwayApp {
             let Self { running, game, paused } = self;
             match event::read()? {
                 Event::Mouse(MouseEvent{kind, column, row, modifiers: _}) => {
-                    match kind {
-                        event::MouseEventKind::Down(event::MouseButton::Left) => {
-                            let (h, w) = game.get_grid().size();
-                            let (x, y) = (((column / 2) as usize), (row as usize));
-                            if y < h && x < w {
-                                game.toggle(y, x);
-                            }
+                    if let event::MouseEventKind::Down(event::MouseButton::Left) = kind {
+                        let (h, w) = game.get_grid().size();
+                        let (x, y) = (((column / 2) as usize), (row as usize));
+                        if y < h && x < w {
+                            game.toggle(y, x);
                         }
-                        _ => {}
                     }
                 }
                 Event::Key(KeyEvent{code, modifiers: _, kind: _, state: _}) => {

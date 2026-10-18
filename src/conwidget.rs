@@ -34,6 +34,6 @@ impl StatefulWidget for &GameOfLife{
                 let _ = buf.set_span(left + 2*c, top + r, &span, 2);
             }
         }
-        ()
+        
     }
 }
