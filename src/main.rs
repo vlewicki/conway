@@ -66,7 +66,7 @@ impl ConwayApp {
                         KeyCode::Char('q') => *running = false,
                         KeyCode::Char('p') => *paused = !*paused,
                         KeyCode::Char('f') => game.step(),
-                        KeyCode::Char('s') => game.get_grid().save("./backup".into()),
+                        KeyCode::Char('s') => game.get_grid().save("./data/backup".into()),
                         KeyCode::Char('l') => *game = GameOfLife::from_grid(Grid::load("./backup".into()).unwrap()),
                         KeyCode::Char('C') => *game = GameOfLife::from_grid(Grid::new(50, 50)),
                         _ => {}
