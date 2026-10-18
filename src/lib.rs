@@ -1,3 +1,3 @@
 mod conway;
 
-pub use conway::{GameOfLife, Grid, Cell};
+pub use conway::{Cell, GameOfLife, Grid};

@@ -1,3 +1,3 @@
 pub struct GameState {
-    pub paused: bool
+    pub paused: bool,
 }
