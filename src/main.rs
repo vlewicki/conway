@@ -2,56 +2,52 @@ mod conway;
 mod conwidget;
 mod constore;
 mod gamestate;
+mod app;
 
-use std::{io::{Error, stdout}, time::Duration};
+
+use std::{io::{Error, Result, stdout}, thread, time::Duration};
 
 use crossterm::{event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseEvent}, execute};
 use ratatui::{DefaultTerminal, Frame};
 
-use crate::{conway::{Cell::{self}, GameOfLife, Grid}, gamestate::GameState};
+use crate::{app::App, conway::{Cell::{self}, GameOfLife, Grid}, gamestate::GameState};
 
-fn get_grid(grid: Vec<Vec<u8>>) -> Grid<Cell> {
-    let rows = grid.len();
-    let cols = grid[0].len();
-    let grid: Vec<Cell> = grid
-        .into_iter()
-        .flatten()
-        .map(|value| if value == 0 { Cell::Dead } else { Cell::Alive })
-        .collect();
-    assert_eq!(grid.len(), rows * cols);
-    Grid::from_slice(grid.as_slice(), rows, cols)
+
+struct ConwayApp{
+    running: bool,
+    game: GameOfLife,
+    paused: bool
 }
 
-fn render(widget: &GameOfLife, frame: &mut Frame, state: &mut GameState){
-    frame.render_stateful_widget(widget, frame.area(), state);
-}
 
-fn main_loop(terminal: &mut DefaultTerminal) -> Result<(), Error>{
-    execute!(stdout(), EnableMouseCapture).expect("mouse not captured");
-    // let grid1 = get_grid(vec![
-    //     vec![0, 1, 1, 0, 0, 0],
-    //     vec![1, 0, 0, 1, 0, 0],
-    //     vec![0, 1, 0, 1, 0, 0],
-    //     vec![0, 0, 1, 0, 0, 0],
-    //     vec![0, 0, 0, 0, 0, 0],
-    //     vec![0, 0, 0, 0, 0, 0],
-    //     vec![0, 0, 1, 1, 1, 0],
-    //     vec![0, 1, 1, 1, 0, 0],
-    //     vec![0, 0, 0, 0, 0, 0],
-    // ]);
-    // 
-    // let mut game = GameOfLife::from_grid(grid1.clone());
-    let mut game = GameOfLife::from_grid(Grid::new(50, 50));
-    let mut running = true;
-    let mut pause = true;
-    while running {
-        let _ = terminal.draw(
-            |frame| render(&game, frame, &mut GameState { paused: pause })
-        ).unwrap();
-        if !pause{
-            game.step();
+impl App for ConwayApp{
+    fn running(&self) -> bool {
+        self.running
+    }
+    fn draw(&self, frame: &mut Frame) {
+        frame.render_stateful_widget(&self.game, frame.area(), &mut GameState{paused: self.paused});
+    }
+
+    fn tick(&mut self) -> std::io::Result<()> {
+        if !self.paused{
+            self.game.step()
         }
-        if event::poll(Duration::from_millis(100))? {
+        self.handle_input()?;
+        thread::sleep(Duration::from_millis(16));
+        Ok(())
+    }
+}
+
+impl ConwayApp {
+    pub fn run(&mut self) -> Result<()>{
+        execute!(stdout(), EnableMouseCapture).unwrap();
+        let result = App::run(self);
+        execute!(stdout(), DisableMouseCapture).unwrap();
+        result
+    }
+    fn handle_input(&mut self) -> Result<()> {
+        while event::poll(Duration::from_millis(0))? {
+            let Self { running, game, paused } = self;
             match event::read()? {
                 Event::Mouse(MouseEvent{kind, column, row, modifiers}) => {
                     match kind {
@@ -67,25 +63,25 @@ fn main_loop(terminal: &mut DefaultTerminal) -> Result<(), Error>{
                 }
                 Event::Key(KeyEvent{code, modifiers, kind, state}) => {
                     match code {
-                        KeyCode::Char('q') => running = false,
-                        KeyCode::Char('p') => pause = !pause,
+                        KeyCode::Char('q') => *running = false,
+                        KeyCode::Char('p') => *paused = !*paused,
                         KeyCode::Char('f') => game.step(),
                         KeyCode::Char('s') => game.get_grid().save("./backup".into()),
-                        KeyCode::Char('l') => game = GameOfLife::from_grid(Grid::load("./backup".into()).unwrap()),
-                        KeyCode::Char('C') => game = GameOfLife::from_grid(Grid::new(50, 50)),
+                        KeyCode::Char('l') => *game = GameOfLife::from_grid(Grid::load("./backup".into()).unwrap()),
+                        KeyCode::Char('C') => *game = GameOfLife::from_grid(Grid::new(50, 50)),
                         _ => {}
                     }
                 }
                 _ => {}
             }
         }
+        Ok(())
     }
-    execute!(stdout(), DisableMouseCapture).expect("mouse not discaptured");
-    Ok(())
 }
 
-fn main() -> Result<(), Error>{
-    ratatui::run(
-        |terminal| main_loop(terminal)
-    )
+fn main() -> Result<()>{
+    ConwayApp{game: GameOfLife::from_grid(Grid::new(100, 100)),
+        running: true,
+        paused: true
+    }.run()
 }
